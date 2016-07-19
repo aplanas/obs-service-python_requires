@@ -124,6 +124,24 @@ class SanitizeRequirementsTests(unittest.TestCase):
                 "wmi;sys_platform=='win32'\n"))
 
 
+class AlternativeNamesTest(unittest.TestCase):
+    def test_alternative_names(self):
+        self.assertEqual(pr.alternative_names('python-foo'),
+                         ['python-foo'])
+        self.assertEqual(pr.alternative_names('python-foo'),
+                         ['python-foo'])
+        self.assertEqual(pr.alternative_names('python-foo-bar'),
+                         ['python-foo-bar'])
+        self.assertEqual(pr.alternative_names('python-foo_bar'),
+                         ['python-foo-bar', 'python-foo_bar'])
+        self.assertEqual(pr.alternative_names('python-foo-bar-baz'),
+                         ['python-foo-bar-baz'])
+        self.assertEqual(pr.alternative_names('python-foo-bar_baz'),
+                         ['python-foo-bar-baz', 'python-foo-bar_baz'])
+        self.assertEqual(pr.alternative_names('python-foo_bar_baz'),
+                         ['python-foo-bar-baz', 'python-foo_bar_baz'])
+
+
 class UpdateRequiresCompleteTest(unittest.TestCase):
     def test_empty(self):
         self.assertEqual({"python-foo": ("2.0", "mysrc")},

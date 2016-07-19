@@ -38,22 +38,44 @@ def read_from_tarball(tar_name, filename):
     return file_content
 
 
+def alternative_names(package):
+    """Generate alternative names for a package."""
+    name = re.match(r'python-(.*)', package).groups(1)[0]
+    parsed = pkg_resources.Requirement.parse(name)
+    alternatives = set((parsed.project_name, parsed.unsafe_name))
+    return ['python-%s' % i for i in sorted(alternatives)]
+
+
 def parse_update_spec_file(specfile, contents, run_requires):
     found_requires = set()
     all_requires = set()
 
+    replace_requires = {}
     for d in run_requires:
         all_requires.add(d)
 
-        if re.search(r'^(Build)?Requires(?:\(.*\))?:\s+%s' % (d), contents,
-                     flags=re.MULTILINE | re.IGNORECASE) >= 0:
-            found_requires.add(d)
+        # Iterate over the alternative names
+        for a in alternative_names(d):
+            if re.search(r'^(Build)?Requires(?:\(.*\))?:\s+%s' % (a), contents,
+                         flags=re.MULTILINE | re.IGNORECASE) >= 0:
+                found_requires.add(a)
 
-        contents = re.sub(
-            r'^(Requires(?:\(.*\))?:[ \t]+)(%s)(?:[ \t].*)?$' % (d),
-            r'\g<1>\g<2>%s' %
-            (" >= " + run_requires[d][0] if run_requires[d][0] else ""),
-            contents, flags=re.MULTILINE | re.IGNORECASE)[:]
+                # Replace the name with the new one
+                if d != a:
+                    all_requires.remove(d)
+                    all_requires.add(a)
+                    replace_requires[d] = a
+
+            contents = re.sub(
+                r'^(Requires(?:\(.*\))?:[ \t]+)(%s)(?:[ \t].*)?$' % (a),
+                r'\g<1>\g<2>%s' %
+                (" >= " + run_requires[d][0] if run_requires[d][0] else ""),
+                contents, flags=re.MULTILINE | re.IGNORECASE)[:]
+
+    # Update the run_requires with the alternate name
+    for d in replace_requires:
+        run_requires[replace_requires[d]] = run_requires[d]
+        del run_requires[d]
 
     if not specfile.endswith("-doc.spec"):
         spec_requires = set()
