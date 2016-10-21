@@ -78,7 +78,7 @@ def parse_update_spec_file(specfile, contents, all_requires):
         contents = re.sub(
             r'^(Requires(?:\(.*\))?:[ \t]+)(%s)(?:[ \t].*)?$' % (d),
             r'\g<1>\g<2>%s' %
-            (" >= " + complete_requires[d][0] if complete_requires[d][0]
+            (" >= " + str(complete_requires[d][0]) if complete_requires[d][0]
              else ""),
             contents, flags=re.MULTILINE | re.IGNORECASE)[:]
 

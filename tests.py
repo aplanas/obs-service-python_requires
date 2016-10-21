@@ -194,6 +194,26 @@ class UpdateSpecFileTest(unittest.TestCase):
             )
         )
 
+    def test_parse_update_spec_file_utf8(self):
+        """No UnicodeDecodeError exception when we mix `unicode` and `str`"""
+        content_init = "\n".join([
+            "Requires: python-pkg1 >=1.0",
+            "BuildRequires: python-pkg1 >= 1.0",
+            "Description: Conversor from £ to ¥",
+        ])
+
+        try:
+            pr.parse_update_spec_file(
+                "testpackage.spec",
+                content_init, {
+                    u"install_requires": [
+                        u"pkg1>=2.0",
+                    ],
+                }
+            )
+        except UnicodeDecodeError:
+            self.fail('parse_update_spec_file() generates UnicodeDecodeError.')
+
 
 class BaseTests(unittest.TestCase):
     def _get_metaextract_fixture_1(self):
